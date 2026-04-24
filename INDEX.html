@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LL-DL Management System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:13px}
+#login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1a3a5c 0%,#2a5298 100%);z-index:9999;display:flex;align-items:center;justify-content:center}
+.login-box{background:#fff;border-radius:14px;padding:2.5rem 2rem;width:90%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
+.login-logo{font-size:20px;font-weight:700;color:#1a3a5c;margin-bottom:3px}
+.login-sub{font-size:12px;color:#888;margin-bottom:1.2rem}
+.login-user-select{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;justify-content:center}
+.user-chip{padding:6px 14px;border:1.5px solid #ccc;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;color:#555;transition:all .15s}
+.user-chip:hover{border-color:#1a3a5c;color:#1a3a5c}
+.user-chip.sel-admin{background:#c62828;color:#fff;border-color:#c62828}
+.user-chip.sel-staff{background:#2e7d32;color:#fff;border-color:#2e7d32}
+.lf{text-align:left;margin-bottom:10px}
+.lf label{font-size:10px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px}
+.lf input{font-size:13px;padding:9px 11px;border:1px solid #ccc;border-radius:6px;width:100%}
+.lf input:focus{outline:none;border-color:#1a3a5c}
+.login-btn{width:100%;padding:10px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-btn:hover{background:#15304d}
+.login-err{color:#c62828;font-size:12px;margin-top:8px;display:none;font-weight:600}
+.login-hint{font-size:11px;color:#bbb;margin-top:14px}
+.topbar{background:#1a3a5c;color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:6px}
+.topbar h1{font-size:15px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ubadge{border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600}
+.ubadge-admin{background:rgba(198,40,40,.5)}
+.ubadge-staff{background:rgba(46,125,50,.5)}
+.save-info{font-size:10px;color:#90b8d8}
+.logout-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600}
+.app{max-width:1060px;margin:0 auto;padding:1rem}
+.tabs{display:flex;gap:5px;margin-bottom:1.1rem;flex-wrap:wrap;border-bottom:1px solid #ddd;padding-bottom:9px}
+.tab{padding:7px 13px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#555;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s}
+.tab:hover{background:#eaf0f8}
+.tab.active{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
+.tab.rtab{border-color:#7b1fa2;color:#7b1fa2}
+.tab.rtab.active{background:#7b1fa2;color:#fff;border-color:#7b1fa2}
+.tab.atab{border-color:#c62828;color:#c62828}
+.tab.atab.active{background:#c62828;color:#fff;border-color:#c62828}
+.sec{display:none}.sec.active{display:block}
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:1rem 1.2rem;margin-bottom:.9rem;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.rcard{border-left:4px solid #7b1fa2}
+.acard{border:2px solid #c62828}
+.ct{font-size:10px;font-weight:700;color:#888;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.07em}
+.ctp{color:#7b1fa2}.ctr{color:#c62828}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.fld{display:flex;flex-direction:column;gap:3px}
+.fld label{font-size:10px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.fld input,.fld select,.fld textarea{font-size:12px;padding:7px 9px;border:1px solid #ccc;border-radius:5px;background:#fff;color:#1a1a1a;width:100%}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:#1a3a5c}
+.fld input[readonly]{background:#f5f5f0;color:#777;cursor:not-allowed}
+.badge{background:#f0f0ea;border-radius:5px;padding:7px 10px;font-size:13px;font-weight:600;border:1px solid #e0e0d8;display:inline-block}
+.btn{padding:7px 16px;border-radius:6px;border:1px solid #ccc;background:#fff;color:#333;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s}
+.btn:hover{background:#f0f0f0}
+.bp{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
+.bs{background:#2e7d32;color:#fff;border-color:#2e7d32}
+.bw{background:#e65100;color:#fff;border-color:#e65100}
+.bd{background:#c62828;color:#fff;border-color:#c62828}
+.bpur{background:#7b1fa2;color:#fff;border-color:#7b1fa2}
+.bsm{padding:4px 9px;font-size:11px}
+.actions{display:flex;gap:7px;margin-top:.9rem;flex-wrap:wrap;align-items:center}
+.awrap{display:flex;gap:5px;align-items:flex-end}
+.awrap select{flex:1}
+.aadd{padding:7px 10px;background:#1a3a5c;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0}
+.aadd:hover{background:#15304d}
+.trow{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:6px;border:1px solid #e0e0e0;background:#f8f8f4;margin-bottom:5px}
+.trow.tdone{background:#e8f5e9;border-color:#81c784}
+.trow label{font-size:12px;cursor:pointer;flex:1}
+.trow.tdone label{color:#2e7d32;font-weight:500}
+.chk{width:20px;height:20px;border-radius:50%;border:2px solid #bbb;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;cursor:pointer;font-size:12px;font-weight:700;transition:all .15s;user-select:none}
+.chk.on{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.crow{display:grid;grid-template-columns:32px 1.8fr .9fr 1.1fr .8fr .8fr 100px;gap:6px;align-items:center;padding:9px 10px;border-radius:6px;border:1px solid #e0e0e0;cursor:pointer;margin-bottom:5px;background:#fff;transition:border-color .1s,background .1s}
+.crow:hover{border-color:#1a3a5c;background:#f0f5fa}
+.crow.hdr{background:#f0f0ea;cursor:default;font-size:10px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.05em}
+.crow.hdr:hover{background:#f0f0ea;border-color:#e0e0e0}
+.crow.elig{background:#e8f5e9;border-color:#4caf50}
+.crow.urgnt{background:#fff8e1;border-color:#ffa000}
+.crow.exprd{background:#ffebee;border-color:#ef5350}
+.crow.complt{background:#e3f2fd;border-color:#1976d2}
+.rrow{display:grid;grid-template-columns:32px 1.8fr .9fr 1fr 1fr .8fr 100px;gap:6px;align-items:center;padding:9px 10px;border-radius:6px;border:1px solid #e0e0e0;cursor:pointer;margin-bottom:5px;background:#fff;transition:border-color .1s,background .1s}
+.rrow:hover{border-color:#7b1fa2;background:#f9f0ff}
+.rrow.hdr{background:#f3e5f5;cursor:default;font-size:10px;font-weight:700;color:#7b1fa2;text-transform:uppercase;letter-spacing:.05em}
+.rrow.hdr:hover{background:#f3e5f5;border-color:#e0e0e0}
+.rrow.rdone{background:#e8f5e9;border-color:#4caf50}
+.pill{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block;white-space:nowrap}
+.pll{background:#fff8e1;color:#e65100}
+.pld{background:#e3f2fd;color:#1565c0}
+.pls{background:#e8f5e9;color:#2e7d32}
+.plp{background:#f5f5f5;color:#555}
+.plr{background:#f3e5f5;color:#7b1fa2}
+.red{color:#c62828;font-weight:600}.grn{color:#2e7d32;font-weight:600}
+.stitle{font-size:16px;font-weight:700;color:#1a3a5c;margin-bottom:1rem}
+.stitle.p{color:#7b1fa2}.stitle.r{color:#c62828}
+.dvd{border:none;border-top:1px solid #eee;margin:.7rem 0}
+.bbtn{display:flex;align-items:center;gap:5px;background:none;border:none;color:#555;cursor:pointer;font-size:12px;padding:0;margin-bottom:.9rem;font-weight:600}
+.pbar{height:6px;background:#e0e0e0;border-radius:3px;overflow:hidden;flex:1}
+.pfill{height:100%;background:#1a3a5c;border-radius:3px;transition:width .3s}
+.pfill.p{background:#7b1fa2}
+.mcard{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:.9rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.mv{font-size:22px;font-weight:700}.ml{font-size:11px;color:#888;margin-top:3px}
+.sbar{display:flex;gap:7px;margin-bottom:.9rem;align-items:center;flex-wrap:wrap}
+.sbar input,.sbar select{font-size:12px;padding:7px 10px;border:1px solid #ccc;border-radius:5px;background:#fff;color:#1a1a1a}
+.sbar input{flex:1;min-width:150px}
+.toast{background:#2e7d32;color:#fff;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:600;margin-bottom:.75rem;display:none;border-left:4px solid #1b5e20}
+.toast.show{display:block}
+.toast.warn{background:#e65100;border-left-color:#bf360c}
+.toast.info{background:#1565c0;border-left-color:#0d47a1}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#666;margin-bottom:.8rem;padding:8px 12px;background:#fff;border-radius:6px;border:1px solid #e0e0e0}
+.legdot{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:10px;padding:1.5rem;width:90%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.wabtn{background:#25D366;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th,td{padding:6px 8px;border:1px solid #e0e0e0;text-align:left;font-size:11px}
+th{background:#f0f0ea;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+tr:nth-child(even){background:#fafaf8}
+.ib{border-radius:6px;padding:9px 13px;font-size:12px;margin-top:8px;font-weight:500}
+.ibg{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}
+.ibb{background:#e3f2fd;color:#1565c0;border:1px solid #90caf9}
+.ibr{background:#ffebee;color:#c62828;border:1px solid #ef9a9a}
+.ibo{background:#fff8e1;color:#e65100;border:1px solid #ffcc80}
+.sbarea{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:.75rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.ss{font-size:11px;color:#888}.ss span{font-weight:600;color:#2e7d32}
+.urow{display:grid;grid-template-columns:1fr 1fr 1fr 80px;gap:8px;align-items:center;padding:8px 10px;border-radius:6px;border:1px solid #e0e0e0;margin-bottom:5px;background:#fff}
+.uhdr{background:#fce8e8;font-size:10px;font-weight:700;color:#c62828;text-transform:uppercase;letter-spacing:.05em}
+.rbadge{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;display:inline-block}
+.radm{background:#fce8e8;color:#c62828}.rstf{background:#e8f5e9;color:#2e7d32}
+.admin-only{display:none}
+body.is-admin .admin-only{display:block}
+</style>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">LL-DL Management System</div>
+    <div class="login-sub">RTO Agent — Secure Login</div>
+    <div class="login-user-select" id="uchips"></div>
+    <div class="lf"><label>Password</label><input type="password" id="lpw" placeholder="Password daalo..." onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="login-btn" onclick="doLogin()">🔐 Login Karo</button>
+    <div class="login-err" id="lerr">❌ Galat password!</div>
+    <div class="login-hint">Default: Admin → <b>admin123</b> &nbsp;|&nbsp; Staff → <b>staff123</b></div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar" id="topbar" style="display:none">
+  <h1>LL-DL Management System</h1>
+  <div class="topbar-right">
+    <div class="save-info" id="saveinfo">Auto-save ON</div>
+    <div class="ubadge" id="ubadge">User</div>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="mainapp" style="display:none">
+<div class="sbarea">
+  <div class="ss">DB: <span id="dbs">LocalStorage</span> &nbsp;|&nbsp; LL/DL: <span id="dbc">0</span> &nbsp;|&nbsp; Renewal: <span id="dbc2">0</span></div>
+  <div style="display:flex;gap:7px;flex-wrap:wrap">
+    <button class="btn bp bsm admin-only" onclick="expJSON()">💾 JSON Backup Save</button>
+    <button class="btn bsm admin-only" onclick="document.getElementById('impF').click()">📂 JSON Backup Load</button>
+    <input type="file" id="impF" accept=".json" style="display:none" onchange="impJSON(event)">
+    <button class="btn bs bsm" onclick="expCSV()">Export CSV</button>
+    <button class="btn bw bsm" onclick="expPDF()">Print / PDF</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="ST('new')">+ New Applicant</button>
+  <button class="tab" onclick="ST('list')">Applicant List</button>
+  <button class="tab" onclick="ST('rem')">Reminders</button>
+  <button class="tab" onclick="ST('pay')">Payment Tracker</button>
+  <button class="tab rtab" onclick="ST('renew')">🔄 DL Renewal</button>
+  <button class="tab atab admin-only" onclick="ST('admin')">⚙️ Admin Panel</button>
+  <button class="tab" onclick="ST('det')" id="dtab" style="display:none">Detail</button>
+  <button class="tab rtab" onclick="ST('rdet')" id="rdtab" style="display:none">Renewal Detail</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- NEW APPLICANT -->
+<div class="sec active" id="new">
+<div class="stitle">New Applicant Registration</div>
+<div class="card">
+  <div class="ct">Applicant Ki Basic Jankari</div>
+  <div class="g3">
+    <div class="fld"><label>Name *</label><input id="fn" type="text" placeholder="Ramesh Kumar"></div>
+    <div class="fld"><label>Date of Birth</label><input id="fd" type="text" placeholder="DD/MM/YYYY" maxlength="10" oninput="fdi(this)"></div>
+    <div class="fld"><label>Mobile No. (WhatsApp) *</label><input id="fm" type="tel" placeholder="9876543210" maxlength="10"></div>
+  </div>
+  <div class="g2" style="margin-top:10px">
+    <div class="fld"><label>Category</label>
+      <select id="fc">
+        <option value="">-- Category Chuniye --</option>
+        <option value="MC">M/C (Motorcycle Only)</option>
+        <option value="MC_LMV">M/C + LMV</option>
+        <option value="MC_LMV_TRAC">M/C + LMV + Tractor</option>
+        <option value="HTV">HTV (Heavy Transport Vehicle)</option>
+        <option value="END_LMV">Endorsement LMV</option>
+        <option value="END_LMV_TRAC">Endorsement LMV + Tractor</option>
+      </select>
+    </div>
+    <div class="fld"><label>Agent</label>
+      <div class="awrap">
+        <select id="fag"></select>
+        <button class="aadd" onclick="addAgP('fag')" title="Naya agent add karo">+ Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div class="ct">Phase 1 — Learning Licence (LL)</div>
+  <div class="g3">
+    <div class="fld"><label>LL Ref / Application No.</label><input id="flr" type="text" placeholder="REF2025001"></div>
+    <div class="fld"><label>LL Number</label><input id="fln" type="text" placeholder="MP-14-2025-123456"></div>
+    <div class="fld"><label>LL Issue Date (Default: Aaj)</label><input id="fls" type="text" placeholder="DD/MM/YYYY" maxlength="10" oninput="fdi(this);calcD()"></div>
+    <div class="fld"><label>LL Expiry (+180 din) — Auto</label><input id="fle" type="text" placeholder="DD/MM/YYYY" readonly></div>
+    <div class="fld"><label>DL Eligibility (+30 din) — Auto</label><input id="fde" type="text" placeholder="DD/MM/YYYY" readonly></div>
+  </div>
+  <div id="dlwin" style="display:none"></div>
+</div>
+<div class="card">
+  <div class="ct">Phase 1 — Amount / Payment</div>
+  <div class="g3">
+    <div class="fld"><label>Total Deal Amount (Rs.)</label><input id="ft" type="number" placeholder="3000" oninput="calcB()"></div>
+    <div class="fld"><label>Amount Paid — LL Phase (Rs.)</label><input id="fj" type="number" placeholder="1500" oninput="calcB()"></div>
+    <div><div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:3px">Balance Baki</div><div class="badge" id="fbk" style="font-size:14px;min-width:100px">Rs. 0</div></div>
+  </div>
+</div>
+<div class="card"><div class="ct">Remark</div><div class="fld"><textarea id="frm" rows="2" placeholder="Koi bhi zaruri note..."></textarea></div></div>
+<div class="actions">
+  <button class="btn bp" onclick="saveC()">✓ Save Applicant</button>
+  <button class="btn" onclick="clrF()">✕ Clear</button>
+</div>
+</div>
+
+<!-- APPLICANT LIST -->
+<div class="sec" id="list">
+<div class="stitle">Applicant List</div>
+<div class="g4" style="margin-bottom:1rem">
+  <div class="mcard"><div class="mv" id="m0">0</div><div class="ml">Total</div></div>
+  <div class="mcard"><div class="mv" id="m1" style="color:#e65100">0</div><div class="ml">LL Phase</div></div>
+  <div class="mcard"><div class="mv" id="m2" style="color:#1565c0">0</div><div class="ml">DL In Progress</div></div>
+  <div class="mcard"><div class="mv" id="m3" style="color:#2e7d32">0</div><div class="ml">Complete</div></div>
+</div>
+<div class="leg">
+  <div style="display:flex;align-items:center;gap:5px"><div class="legdot" style="background:#e8f5e9;border:1px solid #4caf50"></div><span>DL Eligible</span></div>
+  <div style="display:flex;align-items:center;gap:5px"><div class="legdot" style="background:#fff8e1;border:1px solid #ffa000"></div><span>Window Jald Band</span></div>
+  <div style="display:flex;align-items:center;gap:5px"><div class="legdot" style="background:#ffebee;border:1px solid #ef5350"></div><span>Expired</span></div>
+  <div style="display:flex;align-items:center;gap:5px"><div class="legdot" style="background:#e3f2fd;border:1px solid #1976d2"></div><span>Complete</span></div>
+</div>
+<div class="sbar">
+  <input type="text" id="srch" placeholder="Name, Mobile, LL No., Agent se search..." oninput="renderL()">
+  <select id="fstt" onchange="renderL()" style="padding:7px 10px"><option value="">Sabhi Status</option><option value="pend">Pending</option><option value="ll">LL Phase</option><option value="dl">DL Progress</option><option value="done">Complete</option></select>
+  <select id="fagf" onchange="renderL()" style="padding:7px 10px"><option value="">Sabhi Agents</option></select>
+</div>
+<div class="crow hdr"><span>#</span><span>Name / Mobile</span><span>Category</span><span>LL No. / Validity</span><span>Balance</span><span>Status</span><span>Action</span></div>
+<div id="lbody"></div>
+<div id="noc" style="text-align:center;padding:2rem;color:#888;display:none">Koi applicant nahi mila.</div>
+</div>
+
+<!-- REMINDERS -->
+<div class="sec" id="rem">
+<div class="stitle">DL Reminders & Alerts</div>
+<div id="rbody"></div>
+<div id="norem" style="text-align:center;padding:2rem;color:#888;display:none">✓ Koi urgent reminder nahi hai!</div>
+</div>
+
+<!-- PAYMENT TRACKER -->
+<div class="sec" id="pay">
+<div class="stitle">Payment Tracker</div>
+<div class="g4" style="margin-bottom:1rem">
+  <div class="mcard"><div class="mv" id="pt0" style="color:#2e7d32">Rs. 0</div><div class="ml">Total Deal</div></div>
+  <div class="mcard"><div class="mv" id="pt1" style="color:#1565c0">Rs. 0</div><div class="ml">Collected</div></div>
+  <div class="mcard"><div class="mv" id="pt2" style="color:#c62828">Rs. 0</div><div class="ml">Total Baki</div></div>
+  <div class="mcard"><div class="mv" id="pt3">0</div><div class="ml">With Baki</div></div>
+</div>
+<div class="card"><div class="ct">Baki Wale Applicants</div><div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Name</th><th>Mobile</th><th>Agent</th><th>Total</th><th>Jama</th><th>Baki</th><th>Status</th><th>WA</th></tr></thead><tbody id="ptbody"></tbody></table></div></div>
+<div class="card"><div class="ct">DL Renewal Summary</div><div class="g4" style="margin-bottom:.5rem"><div class="mcard"><div class="mv" id="rt0" style="color:#7b1fa2">Rs. 0</div><div class="ml">Renewal Total</div></div><div class="mcard"><div class="mv" id="rt1" style="color:#1565c0">Rs. 0</div><div class="ml">Collected</div></div><div class="mcard"><div class="mv" id="rt2" style="color:#c62828">Rs. 0</div><div class="ml">Baki</div></div><div class="mcard"><div class="mv" id="rt3">0</div><div class="ml">With Baki</div></div></div></div>
+<div class="card"><div class="ct">Aaj Ka Summary</div><div id="tsumm" style="font-size:13px;color:#555;padding:.5rem 0">Data add karo...</div></div>
+</div>
+
+<!-- DL RENEWAL -->
+<div class="sec" id="renew">
+<div class="stitle p">🔄 DL Renewal — Expired DL Renewal</div>
+<div class="card rcard">
+  <div class="ct ctp">Renewal Applicant Ki Jankari</div>
+  <div class="g3">
+    <div class="fld"><label>Name *</label><input id="rn" type="text" placeholder="Suresh Verma"></div>
+    <div class="fld"><label>Date of Birth</label><input id="rd" type="text" placeholder="DD/MM/YYYY" maxlength="10" oninput="fdi(this)"></div>
+    <div class="fld"><label>Mobile No. *</label><input id="rm" type="tel" placeholder="9876543210" maxlength="10"></div>
+  </div>
+  <div class="g3" style="margin-top:10px">
+    <div class="fld"><label>Agent / Self</label>
+      <div class="awrap">
+        <select id="rag"></select>
+        <button class="aadd" onclick="addAgP('rag')" title="Naya agent add karo">+ Add</button>
+      </div>
+    </div>
+    <div class="fld"><label>Transport Type</label><select id="rtr"><option value="Non-Transport">Non-Transport</option><option value="Transport">Transport</option></select></div>
+    <div class="fld"><label>DL Number (Expired)</label><input id="rdln" type="text" placeholder="MP-14-2015-123456"></div>
+  </div>
+  <div style="margin-top:10px"><div class="fld" style="max-width:350px"><label>DL Ref No.</label><input id="rdlr" type="text" placeholder="DLREF2025001"></div></div>
+</div>
+<div class="card rcard">
+  <div class="ct ctp">Amount / Payment</div>
+  <div class="g3">
+    <div class="fld"><label>Deal Amount (Rs.)</label><input id="rtot" type="number" placeholder="2000" oninput="calcRB()"></div>
+    <div class="fld"><label>Jama / Paid (Rs.)</label><input id="rjam" type="number" placeholder="1000" oninput="calcRB()"></div>
+    <div><div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;margin-bottom:3px">Baki (Auto)</div><div class="badge" id="rbk" style="font-size:14px;min-width:100px">Rs. 0</div></div>
+  </div>
+</div>
+<div class="card rcard"><div class="ct ctp">Remark</div><div class="fld"><textarea id="rrm" rows="2" placeholder="Koi zaruri note..."></textarea></div></div>
+<div class="actions">
+  <button class="btn bpur" onclick="saveR()">✓ Save Renewal Applicant</button>
+  <button class="btn" onclick="clrRF()">✕ Clear</button>
+</div>
+<div class="dvd" style="margin:1.2rem 0"></div>
+<div class="stitle p" style="font-size:14px;margin-bottom:.7rem">Renewal Applicant List</div>
+<div class="sbar">
+  <input type="text" id="rsrch" placeholder="Name ya Mobile se search..." oninput="renderRL()">
+  <select id="rfstt" onchange="renderRL()" style="padding:7px 10px"><option value="">Sabhi</option><option value="pending">In Progress</option><option value="done">Complete</option></select>
+</div>
+<div class="rrow hdr"><span>#</span><span>Name / Mobile</span><span>DL No.</span><span>Agent / Transport</span><span>Deal / Baki</span><span>Status</span><span>Action</span></div>
+<div id="rlbody"></div>
+<div id="rnoc" style="text-align:center;padding:1.5rem;color:#888;display:none">Koi renewal nahi mila.</div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="sec admin-only" id="admin">
+<div class="stitle r">⚙️ Admin Panel</div>
+
+<div class="card acard">
+  <div class="ct ctr">👥 User Management — Login Accounts</div>
+  <div class="urow uhdr"><span>Username</span><span>Role</span><span>Password</span><span>Action</span></div>
+  <div id="ulist"></div>
+  <div class="dvd"></div>
+  <div class="ct ctr">Naya User Add Karo</div>
+  <div class="g3">
+    <div class="fld"><label>Username</label><input id="nu-n" type="text" placeholder="staff2"></div>
+    <div class="fld"><label>Password</label><input id="nu-p" type="text" placeholder="password123"></div>
+    <div class="fld"><label>Role</label><select id="nu-r"><option value="staff">Staff (Limited)</option><option value="admin">Admin (Full)</option></select></div>
+  </div>
+  <div class="actions"><button class="btn bd" onclick="addUser()">+ User Add Karo</button></div>
+</div>
+
+<div class="card acard">
+  <div class="ct ctr">🧑‍💼 Agent Management</div>
+  <div id="aglist" style="margin-bottom:.75rem"></div>
+  <div class="dvd"></div>
+  <div class="ct ctr">Naya Agent Add Karo</div>
+  <div style="display:flex;gap:8px;align-items:flex-end">
+    <div class="fld" style="flex:1"><label>Agent Name</label><input id="nag" type="text" placeholder="Mohan Sharma"></div>
+    <button class="btn bd" onclick="addAgAdmin()">+ Add Agent</button>
+  </div>
+</div>
+
+<div class="card acard">
+  <div class="ct ctr">🔑 Apna Password Change Karo</div>
+  <div class="g3">
+    <div class="fld"><label>Purana Password</label><input id="cp1" type="password" placeholder="Purana..."></div>
+    <div class="fld"><label>Naya Password</label><input id="cp2" type="password" placeholder="Naya..."></div>
+    <div class="fld"><label>Confirm</label><input id="cp3" type="password" placeholder="Confirm..."></div>
+  </div>
+  <div class="actions"><button class="btn bp" onclick="chgPW()">Password Change Karo</button></div>
+</div>
+
+<div class="card acard">
+  <div class="ct ctr">☁️ Firebase Setup — Online Cloud Sync</div>
+  <div id="fbstatus" style="font-size:12px;padding:8px 12px;border-radius:6px;background:#f5f5f0;border:1px solid #e0e0e0;margin-bottom:10px">
+    Status: <span id="fbstatustxt" style="font-weight:700;color:#e65100">Not Connected (LocalStorage only)</span>
+  </div>
+  <div style="font-size:11px;color:#888;margin-bottom:10px;line-height:1.6">
+    Firebase config paste karo neeche. Ek baar connect hoga toh <b>automatically</b> hamesha connect rahega.<br>
+    Saara data real-time cloud mein save hoga — kisi bhi device se access kar sako ge.
+  </div>
+  <div class="fld" style="margin-bottom:8px"><label>Firebase Config (JSON)</label>
+    <textarea id="fbcfginput" rows="6" style="font-size:11px;font-family:monospace;resize:vertical" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "your-app.firebaseapp.com",
+  "databaseURL": "https://your-app-default-rtdb.firebaseio.com",
+  "projectId": "your-app",
+  "storageBucket": "your-app.appspot.com",
+  "messagingSenderId": "123456",
+  "appId": "1:123:web:abc"
+}'></textarea>
+  </div>
+  <div class="actions">
+    <button class="btn bp" onclick="connectFB()">☁️ Firebase Connect Karo</button>
+    <button class="btn bw" onclick="disconnectFirebase()">Disconnect</button>
+  </div>
+</div>
+<div class="card acard">
+  <div class="ct ctr">🗄️ Data Management</div>
+  <div class="actions">
+    <button class="btn bp" onclick="expJSON()">💾 JSON Backup Save</button>
+    <button class="btn" onclick="document.getElementById('impF').click()">📂 JSON Backup Load</button>
+    <button class="btn bd" onclick="clrAll()">⚠️ Saara Data Delete</button>
+  </div>
+</div>
+</div>
+
+<!-- DETAIL -->
+<div class="sec" id="det"><button class="bbtn" onclick="ST('list')">← Wapas List Par</button><div id="detcnt"></div></div>
+<!-- RENEWAL DETAIL -->
+<div class="sec" id="rdet"><button class="bbtn" onclick="ST('renew')">← Wapas Renewal Par</button><div id="rdetcnt"></div></div>
+
+</div><!-- /app -->
+
+<!-- WA MODAL -->
+<div class="modal-overlay" id="wamod">
+  <div class="modal-box">
+    <div style="font-size:15px;font-weight:700;margin-bottom:.9rem;color:#1a3a5c">WhatsApp Message Bhejo</div>
+    <div class="fld" style="margin-bottom:8px"><label>Mobile No.</label><input id="wanum" type="tel" maxlength="10"></div>
+    <div class="fld" style="margin-bottom:8px"><label>Template</label>
+      <select id="watpl" onchange="updWA()">
+        <option value="ll">LL Taiyaar Hai</option>
+        <option value="dl">DL Apply Ho Gaya</option>
+        <option value="complete">DL Download — Kaam Poora</option>
+        <option value="reminder">DL Apply Reminder</option>
+        <option value="baki">Payment Reminder</option>
+        <option value="rn">DL Renewal Complete</option>
+      </select>
+    </div>
+    <div class="fld" style="margin-bottom:10px"><label>Message</label><textarea id="wamsg" rows="7" style="font-size:12px;line-height:1.5;resize:vertical"></textarea></div>
+    <div class="actions"><button class="wabtn" onclick="sendWA()">📱 WhatsApp Open</button><button class="btn bsm" onclick="closeWA()">Bandh</button></div>
+  </div>
+</div>
+
+<script>
+var CL=[],RN=[],curC=null,curR=null,waId=null,waT='c',idS=1,ridS=1,CU=null,SEL=null;
+var DB=null,FB_CFG=null,FB_SYNCING=false;
+var USERS=[],AGENTS=['Self','Mohan Agency','Sharma Travels','Gupta RTO Services'];
+var CAT={MC:'M/C',MC_LMV:'M/C+LMV',MC_LMV_TRAC:'M/C+LMV+Trac',HTV:'HTV',END_LMV:'End.LMV',END_LMV_TRAC:'End.LMV+Trac'};
+var WTPL={
+  ll:function(c){return'Namaskar '+c.name+' ji,\n\nAapka Learning Licence taiyaar hai!\n• LL No: '+(c.llno||'—')+'\n• Validity: '+c.llstart+' se '+c.llend+' tak\n• DL Apply: '+c.dlelig+' se\n\nOffice mein aaiye.\nDhanyawad.';},
+  dl:function(c){return'Namaskar '+c.name+' ji,\n\nDL Application ho gayi!\n• DL Ref: '+(c.p2.dlref||'—')+'\n• Category: '+(CAT[c.cat]||'—')+'\n\nApproval baad suchit karenge.\nDhanyawad.';},
+  complete:function(c){return'Namaskar '+c.name+' ji,\n\nAapka Driving Licence taiyaar hai!\nPDF download kar lijiye.\n\nDhanyawad, RTO Agent.';},
+  reminder:function(c){return'Namaskar '+c.name+' ji,\n\nLL ke 30 din poore ho gaye.\nAb DL apply kar sakte hain.\nAakhiri tarikh: '+c.llend+'\n\nJald aaiye.\nDhanyawad.';},
+  baki:function(c){return'Namaskar '+c.name+' ji,\n\nRs. '+fmt(getTB(c))+' baki hai.\nKripya jaldi payment karen.\nDhanyawad, RTO Agent.';},
+  rn:function(r){return'Namaskar '+r.name+' ji,\n\nDL Renewal ('+(r.dlno||'—')+') complete ho gaya!\nPDF download kar lijiye.\n\nDhanyawad, RTO Agent.';}
+};
+
+function xh(s){var k=42,o='';for(var i=0;i<s.length;i++)o+=String.fromCharCode(s.charCodeAt(i)^k);return btoa(o);}
+function xc(s,h){return xh(s)===h;}
+function fmt(n){return Math.round(n||0).toLocaleString('en-IN');}
+function today(){var d=new Date();return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();}
+function pad(n){return String(n).padStart(2,'0');}
+function fdi(el){var v=el.value.replace(/\D/g,'');if(v.length>8)v=v.slice(0,8);var o='';if(v.length<=2)o=v;else if(v.length<=4)o=v.slice(0,2)+'/'+v.slice(2);else o=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);el.value=o;}
+function toISO(s){if(!s||s.length<10)return'';var p=s.split('/');if(p.length!==3)return'';return p[2]+'-'+p[1]+'-'+p[0];}
+function toDMY(iso){if(!iso)return'';var p=iso.split('-');if(p.length!==3)return iso;return p[2]+'/'+p[1]+'/'+p[0];}
+function addD(iso,n){if(!iso)return'';var d=new Date(iso);d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
+
+function calcD(){
+  var s=document.getElementById('fls').value;if(!s||s.length<10)return;
+  var iso=toISO(s);if(!iso)return;
+  document.getElementById('fle').value=toDMY(addD(iso,180));
+  document.getElementById('fde').value=toDMY(addD(iso,30));
+  var now=new Date(),df=new Date(addD(iso,30)),de=new Date(addD(iso,180));
+  var el=document.getElementById('dlwin');el.style.display='block';el.style.marginTop='8px';el.style.fontWeight='500';
+  if(now<df){el.className='ib ibb';el.textContent='DL window: '+toDMY(addD(iso,30))+' se '+toDMY(addD(iso,180))+' tak';}
+  else if(now>=df&&now<=de){el.className='ib ibg';el.textContent='DL apply karne ka waqt aa gaya!';}
+  else{el.className='ib ibr';el.textContent='LL validity khatam!';}
+}
+function calcB(){var t=parseFloat(document.getElementById('ft').value)||0,j=parseFloat(document.getElementById('fj').value)||0,b=t-j,el=document.getElementById('fbk');el.textContent='Rs. '+fmt(b);el.style.color=b>0?'#c62828':'#2e7d32';}
+function calcRB(){var t=parseFloat(document.getElementById('rtot').value)||0,j=parseFloat(document.getElementById('rjam').value)||0,b=t-j,el=document.getElementById('rbk');el.textContent='Rs. '+fmt(b);el.style.color=b>0?'#c62828':'#2e7d32';}
+
+// AGENT DROPDOWNS
+function refAgents(){
+  var sels=['fag','rag','fagf'];
+  sels.forEach(function(sid){
+    var sel=document.getElementById(sid);if(!sel)return;
+    var cur=sel.value;
+    if(sid==='fagf'){
+      sel.innerHTML='<option value="">Sabhi Agents</option>';
+      AGENTS.forEach(function(a){sel.innerHTML+='<option value="'+a+'">'+a+'</option>';});
+    }else{
+      sel.innerHTML='<option value="">-- Agent Chuniye --</option>';
+      AGENTS.forEach(function(a){sel.innerHTML+='<option value="'+a+'">'+a+'</option>';});
+    }
+    if(cur)sel.value=cur;
+  });
+}
+function addAgP(sid){
+  var name=prompt('Naya agent ka naam daalo:');
+  if(!name||!name.trim())return;
+  name=name.trim();
+  if(AGENTS.indexOf(name)>=0){showT('Yeh agent pehle se hai!','warn');return;}
+  AGENTS.push(name);save();refAgents();
+  document.getElementById(sid).value=name;
+  if(CU&&CU.role==='admin')renderAdmin();
+  showT('"'+name+'" add ho gaya!');
+}
+function addAgAdmin(){
+  var name=document.getElementById('nag').value.trim();
+  if(!name){showT('Agent naam daalo!','warn');return;}
+  if(AGENTS.indexOf(name)>=0){showT('Pehle se hai!','warn');return;}
+  AGENTS.push(name);save();refAgents();renderAdmin();
+  document.getElementById('nag').value='';showT('"'+name+'" add ho gaya!');
+}
+
+// LOGIN
+function initLogin(){
+  var ch=document.getElementById('uchips');
+  ch.innerHTML=USERS.map(function(u,i){return'<div class="user-chip" onclick="selU('+i+')" id="ch'+i+'">'+u.username+'</div>';}).join('');
+}
+function selU(i){SEL=i;document.querySelectorAll('.user-chip').forEach(function(c){c.classList.remove('sel-admin','sel-staff');});var u=USERS[i];document.getElementById('ch'+i).classList.add(u.role==='admin'?'sel-admin':'sel-staff');document.getElementById('lpw').focus();}
+function doLogin(){
+  if(SEL===null){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='Pehle user chuniye!';return;}
+  var pw=document.getElementById('lpw').value,u=USERS[SEL];
+  if(!xc(pw,u.pw)){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='❌ Galat password!';document.getElementById('lpw').value='';return;}
+  CU=u;document.getElementById('login-screen').style.display='none';document.getElementById('topbar').style.display='flex';document.getElementById('mainapp').style.display='block';
+  var b=document.getElementById('ubadge');b.textContent=(u.role==='admin'?'👑 ':'')+u.username;b.className='ubadge ubadge-'+(u.role==='admin'?'admin':'staff');
+  if(u.role==='admin')document.body.classList.add('is-admin');else document.body.classList.remove('is-admin');
+  document.getElementById('lpw').value='';document.getElementById('lerr').style.display='none';
+  refAgents();renderL();if(u.role==='admin')renderAdmin();
+}
+function doLogout(){CU=null;SEL=null;document.getElementById('login-screen').style.display='flex';document.getElementById('topbar').style.display='none';document.getElementById('mainapp').style.display='none';document.body.classList.remove('is-admin');document.querySelectorAll('.user-chip').forEach(function(c){c.classList.remove('sel-admin','sel-staff');});ST('new');}
+
+// SAVE APPLICANT
+function saveC(){
+  var name=document.getElementById('fn').value.trim(),mob=document.getElementById('fm').value.trim();
+  if(!name||!mob){showT('Name aur Mobile zaroor daalo!','warn');return;}
+  var lls=document.getElementById('fls').value.trim()||today();
+  var liso=toISO(lls);
+  var c={id:idS++,name:name,dob:document.getElementById('fd').value,mob:mob,cat:document.getElementById('fc').value,agent:document.getElementById('fag').value,
+    llref:document.getElementById('flr').value,llno:document.getElementById('fln').value,
+    llstart:lls,llend:liso?toDMY(addD(liso,180)):'',dlelig:liso?toDMY(addD(liso,30)):'',
+    total:parseFloat(document.getElementById('ft').value)||0,jama:parseFloat(document.getElementById('fj').value)||0,
+    remark:document.getElementById('frm').value,addedDate:new Date().toISOString().split('T')[0],addedBy:CU?CU.username:'',
+    p2:{applied:false,dlref:'',total2:0,jama2:0,finalStatus:'Pending',tracks:{doc:false,fees:false,photo:false,approv:false,download:false}}};
+  c.baki=c.total-c.jama;CL.push(c);save();clrF();showT('Applicant #'+c.id+' — '+c.name+' save ho gaya!');ST('list');
+}
+function clrF(){['fn','fd','fm','flr','fln','fls','fle','fde','ft','fj','frm'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('fc').value='';document.getElementById('fag').value='';document.getElementById('fbk').textContent='Rs. 0';document.getElementById('fbk').style.color='';document.getElementById('dlwin').style.display='none';document.getElementById('fls').value=today();calcD();}
+
+// SAVE RENEWAL
+function saveR(){
+  var name=document.getElementById('rn').value.trim(),mob=document.getElementById('rm').value.trim();
+  if(!name||!mob){showT('Name aur Mobile zaroor daalo!','warn');return;}
+  var t=parseFloat(document.getElementById('rtot').value)||0,j=parseFloat(document.getElementById('rjam').value)||0;
+  var r={id:ridS++,name:name,dob:document.getElementById('rd').value,mob:mob,agent:document.getElementById('rag').value,transport:document.getElementById('rtr').value,
+    dlno:document.getElementById('rdln').value,dlref:document.getElementById('rdlr').value,
+    total:t,jama:j,baki:t-j,remark:document.getElementById('rrm').value,addedDate:new Date().toISOString().split('T')[0],addedBy:CU?CU.username:'',
+    tracks:{doc:false,fees:false,photo:false,approv:false,download:false,complete:false}};
+  RN.push(r);save();clrRF();showT('Renewal #'+r.id+' — '+r.name+' save ho gaya!');renderRL();
+}
+function clrRF(){['rn','rd','rm','rdln','rdlr','rtot','rjam','rrm'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('rag').value='Self';document.getElementById('rtr').value='Non-Transport';document.getElementById('rbk').textContent='Rs. 0';document.getElementById('rbk').style.color='';}
+
+// STATUS
+function getSt(c){
+  if(c.p2.finalStatus==='Completed'||c.p2.tracks.download)return{t:'Complete',cls:'pls',k:'done'};
+  if(c.p2.applied||c.p2.dlref||Object.values(c.p2.tracks).some(function(v){return v;}))return{t:'DL Progress',cls:'pld',k:'dl'};
+  if(c.llno||c.llref)return{t:'LL Phase',cls:'pll',k:'ll'};
+  return{t:'Pending',cls:'plp',k:'pend'};
+}
+function getRSt(r){return r.tracks.complete?{t:'Complete',cls:'pls',k:'done'}:{t:'In Progress',cls:'plr',k:'pending'};}
+function getRCls(c){
+  var s=getSt(c);if(s.k==='done')return'complt';if(!c.llstart)return'';
+  var now=new Date(),liso=toISO(c.llstart);if(!liso)return'';
+  var df=new Date(addD(toISO(c.dlelig)||liso,0)||addD(liso,30));
+  var de=new Date(addD(toISO(c.llend)||liso,0)||addD(liso,180));
+  if(!c.dlelig){df=new Date(addD(liso,30));de=new Date(addD(liso,180));}
+  else{var diso=toISO(c.dlelig);var eiso=toISO(c.llend);df=new Date(diso||addD(liso,30));de=new Date(eiso||addD(liso,180));}
+  if(now>de)return'exprd';
+  var dl=Math.ceil((de-now)/864e5);
+  if(now>=df&&now<=de&&s.k==='ll')return'elig';
+  if(dl<=30&&dl>0&&s.k==='ll')return'urgnt';
+  return'';
+}
+function getTB(c){return c.baki+(c.p2.total2-c.p2.jama2);}
+
+// RENDER LIST
+function renderL(){
+  var q=(document.getElementById('srch').value||'').toLowerCase();
+  var sf=document.getElementById('fstt').value,af=document.getElementById('fagf').value;
+  var list=CL.filter(function(c){
+    var m=!q||(c.name.toLowerCase().indexOf(q)>=0||c.mob.indexOf(q)>=0||(c.llno||'').toLowerCase().indexOf(q)>=0||(c.agent||'').toLowerCase().indexOf(q)>=0);
+    return m&&(!sf||getSt(c).k===sf)&&(!af||(c.agent||'')===af);
+  });
+  updM();document.getElementById('dbc').textContent=CL.length;document.getElementById('dbc2').textContent=RN.length;
+  document.getElementById('noc').style.display=list.length?'none':'block';
+  document.getElementById('lbody').innerHTML=list.map(function(c){
+    var s=getSt(c),tb=getTB(c),rc=getRCls(c);
+    return'<div class="crow '+rc+'" onclick="openD('+c.id+')">'
+      +'<span style="font-size:11px;color:#888">#'+c.id+'</span>'
+      +'<span><div style="font-weight:700;font-size:12px">'+c.name+'</div><div style="font-size:11px;color:#777">'+c.mob+(c.agent?' | '+c.agent:'')+'</div></span>'
+      +'<span style="font-size:11px">'+(CAT[c.cat]||'—')+'</span>'
+      +'<span><div style="font-size:11px;font-weight:600">'+(c.llno||'—')+'</div><div style="font-size:10px;color:#888">'+c.llstart+' - '+c.llend+'</div></span>'
+      +'<span class="'+(tb>0?'red':'grn')+'" style="font-size:12px">Rs.'+fmt(tb)+'</span>'
+      +'<span><span class="pill '+s.cls+'">'+s.t+'</span></span>'
+      +'<span><button class="btn bsm" style="background:#25D366;color:#fff;border:none;font-size:10px;padding:4px 8px" onclick="event.stopPropagation();openWA('+c.id+',\'c\')">WA</button></span>'
+      +'</div>';
+  }).join('');
+}
+
+function renderRL(){
+  var q=(document.getElementById('rsrch').value||'').toLowerCase(),sf=document.getElementById('rfstt').value;
+  var list=RN.filter(function(r){return(!q||(r.name.toLowerCase().indexOf(q)>=0||r.mob.indexOf(q)>=0))&&(!sf||getRSt(r).k===sf);});
+  document.getElementById('rnoc').style.display=list.length?'none':'block';
+  document.getElementById('rlbody').innerHTML=list.map(function(r){
+    var s=getRSt(r);
+    return'<div class="rrow '+(s.k==='done'?'rdone':'')+'" onclick="openRD('+r.id+')">'
+      +'<span style="font-size:11px;color:#888">#'+r.id+'</span>'
+      +'<span><div style="font-weight:700;font-size:12px">'+r.name+'</div><div style="font-size:11px;color:#777">'+r.mob+'</div></span>'
+      +'<span style="font-size:11px;font-weight:600">'+(r.dlno||'—')+'</span>'
+      +'<span style="font-size:11px">'+r.agent+' / '+r.transport+'</span>'
+      +'<span><div class="'+(r.baki>0?'red':'grn')+'" style="font-size:12px">Baki: Rs.'+fmt(r.baki)+'</div><div style="font-size:10px;color:#888">Rs.'+fmt(r.total)+'</div></span>'
+      +'<span><span class="pill '+s.cls+'">'+s.t+'</span></span>'
+      +'<span><button class="btn bsm" style="background:#25D366;color:#fff;border:none;font-size:10px;padding:4px 8px" onclick="event.stopPropagation();openWA('+r.id+',\'r\')">WA</button></span>'
+      +'</div>';
+  }).join('');
+}
+
+function updM(){
+  document.getElementById('m0').textContent=CL.length;
+  document.getElementById('m1').textContent=CL.filter(function(c){return getSt(c).k==='ll';}).length;
+  document.getElementById('m2').textContent=CL.filter(function(c){return getSt(c).k==='dl';}).length;
+  document.getElementById('m3').textContent=CL.filter(function(c){return getSt(c).k==='done';}).length;
+}
+
+function renderRem(){
+  var body=document.getElementById('rbody'),now=new Date(),items=[];
+  CL.forEach(function(c){
+    if(!c.llstart)return;
+    var liso=toISO(c.llstart);if(!liso)return;
+    var diso=toISO(c.dlelig||''),eiso=toISO(c.llend||'');
+    var df=new Date(diso||addD(liso,30)),de=new Date(eiso||addD(liso,180));
+    var dl=Math.ceil((de-now)/864e5),s=getSt(c);if(s.k==='done')return;
+    if(now>de)items.push({c:c,msg:'LL Expire! Nayi LL banwaao.',cls:'ibr',pri:1});
+    else if(now>=df&&s.k==='ll')items.push({c:c,msg:'DL apply karo! '+dl+' din baki.',cls:'ibg',pri:2});
+    else if(dl<=30&&dl>0&&s.k==='ll')items.push({c:c,msg:'Sirf '+dl+' din baki! Jaldi karo.',cls:'ibo',pri:3});
+    else if(now<df){var d2=Math.ceil((df-now)/864e5);if(d2<=7)items.push({c:c,msg:d2+' din mein DL window shuru hogi.',cls:'ibb',pri:4});}
+  });
+  items.sort(function(a,b){return a.pri-b.pri;});
+  document.getElementById('norem').style.display=items.length?'none':'block';
+  body.innerHTML=items.map(function(r){
+    return'<div class="ib '+r.cls+'" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:10px 14px">'
+      +'<div style="flex:1"><div style="font-weight:700;font-size:13px">#'+r.c.id+' — '+r.c.name+' <span style="font-weight:400;font-size:11px">'+r.c.mob+'</span></div>'
+      +'<div style="font-size:12px;margin-top:2px">'+r.msg+'</div>'
+      +'<div style="font-size:11px;margin-top:2px">Agent: '+(r.c.agent||'—')+' | Expiry: '+r.c.llend+'</div></div>'
+      +'<button class="btn bsm" onclick="openD('+r.c.id+')">Detail</button>'
+      +'<button class="btn bsm" style="background:#25D366;color:#fff;border:none" onclick="openWA('+r.c.id+',\'c\')">WA</button>'
+      +'</div>';
+  }).join('');
+}
+
+function renderPay(){
+  var td=CL.reduce(function(a,c){return a+c.total+c.p2.total2;},0);
+  var tj=CL.reduce(function(a,c){return a+c.jama+c.p2.jama2;},0);
+  document.getElementById('pt0').textContent='Rs.'+fmt(td);document.getElementById('pt1').textContent='Rs.'+fmt(tj);
+  document.getElementById('pt2').textContent='Rs.'+fmt(td-tj);document.getElementById('pt3').textContent=CL.filter(function(c){return getTB(c)>0;}).length;
+  var rtd=RN.reduce(function(a,r){return a+r.total;},0),rtj=RN.reduce(function(a,r){return a+r.jama;},0);
+  document.getElementById('rt0').textContent='Rs.'+fmt(rtd);document.getElementById('rt1').textContent='Rs.'+fmt(rtj);
+  document.getElementById('rt2').textContent='Rs.'+fmt(rtd-rtj);document.getElementById('rt3').textContent=RN.filter(function(r){return r.baki>0;}).length;
+  var blist=CL.filter(function(c){return getTB(c)>0;}).sort(function(a,b){return getTB(b)-getTB(a);});
+  document.getElementById('ptbody').innerHTML=blist.map(function(c){var tb=getTB(c),tj2=c.jama+c.p2.jama2,tt=c.total+c.p2.total2;
+    return'<tr><td>#'+c.id+'</td><td><b>'+c.name+'</b></td><td>'+c.mob+'</td><td>'+(c.agent||'—')+'</td><td style="text-align:right">Rs.'+fmt(tt)+'</td><td style="text-align:right;color:#2e7d32">Rs.'+fmt(tj2)+'</td><td style="text-align:right;color:#c62828;font-weight:700">Rs.'+fmt(tb)+'</td><td><span class="pill '+getSt(c).cls+'">'+getSt(c).t+'</span></td><td><button class="btn bsm" style="background:#25D366;color:#fff;border:none;font-size:10px;padding:3px 7px" onclick="openWA('+c.id+',\'c\')">WA</button></td></tr>';
+  }).join('');
+  var tod=new Date().toISOString().split('T')[0];
+  var tc=CL.filter(function(c){return c.addedDate===tod;}),tr2=RN.filter(function(r){return r.addedDate===tod;});
+  var tJ=tc.reduce(function(a,c){return a+c.jama+c.p2.jama2;},0)+tr2.reduce(function(a,r){return a+r.jama;},0);
+  document.getElementById('tsumm').innerHTML='<b>Aaj:</b> '+tc.length+' LL/DL + '+tr2.length+' Renewal &nbsp;|&nbsp; <b>Collection:</b> Rs.'+fmt(tJ)+(tc.length+tr2.length>0?'<br><small style="color:#888">'+tc.concat(tr2).map(function(c){return c.name;}).join(', ')+'</small>':'');
+}
+
+// ADMIN
+function renderAdmin(){
+  var fsel=document.getElementById('fbstatustxt');if(fsel){if(DB){fsel.textContent='Connected ✔';fsel.style.color='#2e7d32';}else{fsel.textContent='Not Connected (LocalStorage only)';fsel.style.color='#e65100';}}
+  document.getElementById('ulist').innerHTML=USERS.map(function(u,i){
+    var me=CU&&u.username===CU.username;
+    return'<div class="urow">'
+      +'<span style="font-weight:600">'+u.username+(me?' <span style="font-size:10px;color:#1565c0">(aap)</span>':' ')+'</span>'
+      +'<span><span class="rbadge '+(u.role==='admin'?'radm':'rstf')+'">'+u.role.toUpperCase()+'</span></span>'
+      +'<span style="color:#bbb;font-size:11px">••••••••</span>'
+      +'<span>'+(me||u.username==='Admin'?'':'<button class="btn bd bsm" onclick="delUser('+i+')">Delete</button>')+'</span>'
+      +'</div>';
+  }).join('');
+  document.getElementById('aglist').innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px">'
+    +AGENTS.map(function(a,i){
+      return'<div style="display:flex;align-items:center;gap:4px;background:#f5f5f0;border:1px solid #e0e0e0;border-radius:20px;padding:4px 12px">'
+        +'<span style="font-size:12px">'+a+'</span>'
+        +(a!=='Self'?'<button onclick="delAg('+i+')" style="background:none;border:none;cursor:pointer;color:#c62828;font-size:14px;font-weight:700;line-height:1">×</button>':'')
+        +'</div>';
+    }).join('')+'</div>';
+}
+function addUser(){
+  var n=document.getElementById('nu-n').value.trim(),p=document.getElementById('nu-p').value.trim(),r=document.getElementById('nu-r').value;
+  if(!n||!p){showT('Username aur Password daalo!','warn');return;}
+  if(USERS.find(function(u){return u.username.toLowerCase()===n.toLowerCase();})){showT('Username pehle se hai!','warn');return;}
+  USERS.push({username:n,role:r,pw:xh(p)});save();renderAdmin();initLogin();
+  document.getElementById('nu-n').value='';document.getElementById('nu-p').value='';
+  showT('"'+n+'" user add ho gaya!');
+}
+function delUser(i){if(USERS[i].username===CU.username){showT('Apna account delete nahi!','warn');return;}if(!confirm('"'+USERS[i].username+'" delete karna chahte?'))return;USERS.splice(i,1);save();renderAdmin();initLogin();showT('User delete ho gaya.');}
+function delAg(i){if(!confirm('"'+AGENTS[i]+'" delete karna chahte?'))return;AGENTS.splice(i,1);save();refAgents();renderAdmin();showT('Agent delete ho gaya.');}
+function chgPW(){
+  var o=document.getElementById('cp1').value,n=document.getElementById('cp2').value,c=document.getElementById('cp3').value;
+  if(!xc(o,CU.pw)){showT('Purana password galat!','warn');return;}
+  if(!n||n.length<4){showT('Password min 4 characters!','warn');return;}
+  if(n!==c){showT('Passwords match nahi!','warn');return;}
+  var u=USERS.find(function(x){return x.username===CU.username;});if(u){u.pw=xh(n);CU.pw=u.pw;}
+  save();document.getElementById('cp1').value='';document.getElementById('cp2').value='';document.getElementById('cp3').value='';
+  showT('Password change ho gaya!');
+}
+function clrAll(){if(!confirm('SAARA DATA DELETE HOGA! Confirm?'))return;if(!confirm('Aakhri baar confirm karo!'))return;CL=[];RN=[];idS=1;ridS=1;save();renderL();renderRL();showT('Saara data delete ho gaya.','warn');}
+
+// DETAIL
+function openD(id){curC=CL.find(function(c){return c.id===id;});if(!curC)return;ST('det');renderD();}
+function renderD(){
+  var c=curC,p=c.p2,b2=p.total2-p.jama2;
+  var tr=[{k:'doc',l:'Document Upload'},{k:'fees',l:'Online Fees Pay'},{k:'photo',l:'Photo / Slot Done'},{k:'approv',l:'Approved by RTO'},{k:'download',l:'DL Download & Send PDF on WhatsApp'}];
+  var dn=tr.filter(function(t){return p.tracks[t.k];}).length,prog=Math.round((dn/tr.length)*100);
+  var dlInfo='';
+  if(c.llstart){
+    var liso=toISO(c.llstart);
+    var df=new Date(toISO(c.dlelig)||addD(liso,30));
+    var de=new Date(toISO(c.llend)||addD(liso,180));
+    var now=new Date();
+    if(now>de)dlInfo='<div class="ib ibr" style="margin-top:8px">LL khatam! Nayi banwaao.</div>';
+    else if(now>=df)dlInfo='<div class="ib ibg" style="margin-top:8px">DL apply karne ka waqt! '+c.dlelig+' — '+c.llend+'</div>';
+    else dlInfo='<div class="ib ibb" style="margin-top:8px">DL window shuru hogi: '+c.dlelig+' se</div>';
+  }
+  document.getElementById('detcnt').innerHTML=
+  '<div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:1rem">'
+    +'<div style="width:46px;height:46px;border-radius:50%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:#fff;flex-shrink:0">'+c.name.charAt(0).toUpperCase()+'</div>'
+    +'<div style="flex:1"><div style="font-size:16px;font-weight:700;color:#1a3a5c">#'+c.id+' — '+c.name+'</div>'
+    +'<div style="font-size:12px;color:#666;margin-top:2px">📱 '+c.mob+(c.agent?' | Agent: '+c.agent:'')+' | DOB: '+(c.dob||'—')+' | '+(CAT[c.cat]||'—')+'</div>'
+    +(c.addedBy?'<div style="font-size:10px;color:#aaa">Added by: '+c.addedBy+' on '+c.addedDate+'</div>':'')
+    +'</div>'
+    +'<button class="wabtn" onclick="openWA('+c.id+',\'c\')" style="font-size:12px;padding:7px 13px">📱 WA</button>'
+    +(CU&&CU.role==='admin'?'<button class="btn bd bsm" onclick="delC('+c.id+')">Delete</button>':'')
+  +'</div>'
+  +'<div class="card"><div class="ct">Phase 1 — Learning Licence</div><div class="g3">'
+    +'<div class="fld"><label>LL Ref / App No.</label><input type="text" value="'+(c.llref||'')+'" onchange="upd('+c.id+',\'llref\',this.value)" onblur="save()"></div>'
+    +'<div class="fld"><label>LL Number</label><input type="text" value="'+(c.llno||'')+'" onchange="upd('+c.id+',\'llno\',this.value)" onblur="save()"></div>'
+    +'<div class="fld"><label>LL Issue Date (DD/MM/YYYY)</label><input type="text" maxlength="10" value="'+(c.llstart||'')+'" oninput="fdi(this)" onchange="updLL('+c.id+',this.value)"></div>'
+    +'<div class="fld"><label>LL Expiry</label><input type="text" value="'+(c.llend||'')+'" readonly></div>'
+    +'<div class="fld"><label>DL Eligibility</label><input type="text" value="'+(c.dlelig||'')+'" readonly></div>'
+    +'<div class="fld"><label>Agent</label><div class="awrap"><select onchange="upd('+c.id+',\'agent\',this.value)" id="dag">'
+      +'<option value="">-- Select --</option>'
+      +AGENTS.map(function(a){return'<option value="'+a+'" '+(c.agent===a?'selected':'')+'>'+a+'</option>';}).join('')
+    +'</select><button class="aadd" onclick="addAgDetC('+c.id+')">+ Add</button></div></div>'
+  +'</div>'
+  +dlInfo
+  +'<div class="dvd"></div><div class="ct">Amount — Phase 1</div><div class="g3">'
+    +'<div class="fld"><label>Total Deal (Rs.)</label><input type="number" value="'+c.total+'" onchange="updA('+c.id+',1,\'total\',this.value)"></div>'
+    +'<div class="fld"><label>Amount Paid (Rs.)</label><input type="number" value="'+c.jama+'" onchange="updA('+c.id+',1,\'jama\',this.value)"></div>'
+    +'<div><div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;margin-bottom:3px">Baki</div><div class="badge '+(c.baki>0?'red':'grn')+'">Rs. '+fmt(c.baki)+'</div></div>'
+  +'</div></div>'
+  +'<div class="card"><div class="ct">Phase 2 — Driving Licence</div><div class="g3">'
+    +'<div class="fld"><label>DL Ref / App No.</label><input type="text" value="'+(p.dlref||'')+'" placeholder="DL Ref..." onchange="upd2('+c.id+',\'dlref\',this.value)" onblur="save()"></div>'
+    +'<div class="fld"><label>Final Status</label><select onchange="upd2('+c.id+',\'finalStatus\',this.value)">'
+      +'<option '+(p.finalStatus==='Pending'?'selected':'')+'>Pending</option>'
+      +'<option '+(p.finalStatus==='In-Progress'?'selected':'')+'>In-Progress</option>'
+      +'<option '+(p.finalStatus==='Completed'?'selected':'')+'>Completed</option>'
+    +'</select></div>'
+  +'</div><div class="dvd"></div><div class="ct">Amount — Phase 2</div><div class="g3">'
+    +'<div class="fld"><label>Remaining Total (Rs.)</label><input type="number" value="'+p.total2+'" onchange="updA('+c.id+',2,\'total\',this.value)"></div>'
+    +'<div class="fld"><label>Amount Paid (Rs.)</label><input type="number" value="'+p.jama2+'" onchange="updA('+c.id+',2,\'jama\',this.value)"></div>'
+    +'<div><div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;margin-bottom:3px">Baki</div><div class="badge '+(b2>0?'red':'grn')+'">Rs. '+fmt(b2)+'</div></div>'
+  +'</div><div class="dvd"></div><div class="ct">Work Progress &nbsp;<span style="background:#e3f2fd;color:#1565c0;padding:2px 10px;border-radius:20px;font-size:11px">'+prog+'%</span></div>'
+  +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div class="pbar"><div class="pfill" style="width:'+prog+'%"></div></div><span style="font-size:11px;color:#888;min-width:34px">'+prog+'%</span></div>'
+  +tr.map(function(t){return'<div class="trow '+(p.tracks[t.k]?'tdone':'')+'">'
+    +'<div class="chk '+(p.tracks[t.k]?'on':'')+'" onclick="togT('+c.id+',\''+t.k+'\')">'+(p.tracks[t.k]?'✓':'')+'</div>'
+    +'<label onclick="togT('+c.id+',\''+t.k+'\')">'+t.l+'</label></div>';}).join('')
+  +'</div>'
+  +'<div class="card"><div class="ct">Remark</div><div class="fld"><textarea rows="2" onchange="upd('+c.id+',\'remark\',this.value)" onblur="save()" style="font-size:12px;resize:vertical">'+( c.remark||'')+'</textarea></div></div>';
+}
+
+function addAgDetC(cid){var n=prompt('Naya agent naam:');if(!n||!n.trim())return;n=n.trim();if(AGENTS.indexOf(n)<0){AGENTS.push(n);save();refAgents();}var c=CL.find(function(x){return x.id===cid;});if(c){c.agent=n;save();}renderD();showT('"'+n+'" add ho gaya!');}
+
+function openRD(id){curR=RN.find(function(r){return r.id===id;});if(!curR)return;ST('rdet');renderRD();}
+function renderRD(){
+  var r=curR;
+  var rt=[{k:'doc',l:'Document Upload'},{k:'fees',l:'Online Fees Pay'},{k:'photo',l:'Photo / Slot Done'},{k:'approv',l:'Approved by RTO'},{k:'download',l:'DL Download & Send PDF on WhatsApp'},{k:'complete',l:'Kaam Poora — Complete!'}];
+  var dn=rt.filter(function(t){return r.tracks[t.k];}).length,prog=Math.round((dn/rt.length)*100);
+  document.getElementById('rdetcnt').innerHTML=
+  '<div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;background:#fff;border-left:4px solid #7b1fa2;border:1px solid #e0e0e0;border-radius:8px;padding:1rem">'
+    +'<div style="width:46px;height:46px;border-radius:50%;background:#7b1fa2;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:#fff;flex-shrink:0">'+r.name.charAt(0).toUpperCase()+'</div>'
+    +'<div style="flex:1"><div style="font-size:16px;font-weight:700;color:#7b1fa2">Renewal #'+r.id+' — '+r.name+'</div>'
+    +'<div style="font-size:12px;color:#666;margin-top:2px">📱 '+r.mob+' | '+r.agent+' | '+r.transport+' | DOB: '+(r.dob||'—')+'</div></div>'
+    +'<button class="wabtn" onclick="openWA('+r.id+',\'r\')" style="font-size:12px;padding:7px 13px">📱 WA</button>'
+    +(CU&&CU.role==='admin'?'<button class="btn bd bsm" onclick="delR('+r.id+')">Delete</button>':'')
+  +'</div>'
+  +'<div class="card rcard"><div class="ct ctp">DL Renewal Details</div><div class="g3">'
+    +'<div class="fld"><label>DL Number</label><input type="text" value="'+(r.dlno||'')+'" onchange="updR('+r.id+',\'dlno\',this.value)" onblur="save()"></div>'
+    +'<div class="fld"><label>DL Ref No.</label><input type="text" value="'+(r.dlref||'')+'" onchange="updR('+r.id+',\'dlref\',this.value)" onblur="save()"></div>'
+  +'</div><div class="g3" style="margin-top:10px">'
+    +'<div class="fld"><label>Agent</label><div class="awrap"><select onchange="updR('+r.id+',\'agent\',this.value)">'
+      +AGENTS.map(function(a){return'<option value="'+a+'" '+(r.agent===a?'selected':'')+'>'+a+'</option>';}).join('')
+    +'</select><button class="aadd" onclick="addAgP(\'rag\')">+ Add</button></div></div>'
+    +'<div class="fld"><label>Transport</label><select onchange="updR('+r.id+',\'transport\',this.value)">'
+      +'<option '+(r.transport==='Non-Transport'?'selected':'')+' value="Non-Transport">Non-Transport</option>'
+      +'<option '+(r.transport==='Transport'?'selected':'')+' value="Transport">Transport</option>'
+    +'</select></div>'
+  +'</div><div class="dvd"></div><div class="ct ctp">Amount</div><div class="g3">'
+    +'<div class="fld"><label>Deal (Rs.)</label><input type="number" value="'+r.total+'" onchange="updRA('+r.id+',\'total\',this.value)"></div>'
+    +'<div class="fld"><label>Jama (Rs.)</label><input type="number" value="'+r.jama+'" onchange="updRA('+r.id+',\'jama\',this.value)"></div>'
+    +'<div><div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;margin-bottom:3px">Baki</div><div class="badge '+(r.baki>0?'red':'grn')+'">Rs. '+fmt(r.baki)+'</div></div>'
+  +'</div></div>'
+  +'<div class="card rcard"><div class="ct ctp">Work Progress &nbsp;<span style="background:#f3e5f5;color:#7b1fa2;padding:2px 10px;border-radius:20px;font-size:11px">'+prog+'%</span></div>'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div class="pbar"><div class="pfill p" style="width:'+prog+'%"></div></div><span style="font-size:11px;color:#888;min-width:34px">'+prog+'%</span></div>'
+    +rt.map(function(t){return'<div class="trow '+(r.tracks[t.k]?'tdone':'')+'">'
+      +'<div class="chk '+(r.tracks[t.k]?'on':'')+'" onclick="togRT('+r.id+',\''+t.k+'\')">'+(r.tracks[t.k]?'✓':'')+'</div>'
+      +'<label onclick="togRT('+r.id+',\''+t.k+'\')">'+t.l+'</label></div>';}).join('')
+  +'</div>'
+  +'<div class="card rcard"><div class="ct ctp">Remark</div><div class="fld"><textarea rows="2" onchange="updR('+r.id+',\'remark\',this.value)" onblur="save()" style="font-size:12px;resize:vertical">'+( r.remark||'')+'</textarea></div></div>';
+}
+
+// DATA UPDATE
+function upd(id,k,v){var c=CL.find(function(x){return x.id===id;});if(c){c[k]=v;save();}}
+function upd2(id,k,v){var c=CL.find(function(x){return x.id===id;});if(!c)return;c.p2[k]=v;if(k==='finalStatus'&&v==='Completed')c.p2.tracks.download=true;save();renderD();}
+function updLL(id,v){var c=CL.find(function(x){return x.id===id;});if(!c)return;c.llstart=v;var iso=toISO(v);if(iso){c.llend=toDMY(addD(iso,180));c.dlelig=toDMY(addD(iso,30));}save();renderD();}
+function updA(id,ph,t,v){var c=CL.find(function(x){return x.id===id;});if(!c)return;if(ph===1){c[t]=parseFloat(v)||0;c.baki=c.total-c.jama;}else{c.p2[t==='total'?'total2':'jama2']=parseFloat(v)||0;}save();renderD();}
+function togT(id,k){var c=CL.find(function(x){return x.id===id;});if(!c)return;c.p2.tracks[k]=!c.p2.tracks[k];c.p2.applied=Object.values(c.p2.tracks).some(function(v){return v;})||!!c.p2.dlref;if(c.p2.tracks.download)c.p2.finalStatus='Completed';save();renderD();renderL();}
+function delC(id){if(!confirm('Applicant delete karna chahte?'))return;CL=CL.filter(function(c){return c.id!==id;});save();ST('list');showT('Delete ho gaya.');}
+function updR(id,k,v){var r=RN.find(function(x){return x.id===id;});if(r){r[k]=v;save();}}
+function updRA(id,t,v){var r=RN.find(function(x){return x.id===id;});if(!r)return;r[t]=parseFloat(v)||0;r.baki=r.total-r.jama;save();renderRD();renderRL();}
+function togRT(id,k){var r=RN.find(function(x){return x.id===id;});if(!r)return;r.tracks[k]=!r.tracks[k];save();renderRD();renderRL();}
+function delR(id){if(!confirm('Renewal delete karna chahte?'))return;RN=RN.filter(function(r){return r.id!==id;});save();ST('renew');showT('Delete ho gaya.');}
+
+// ===== FIREBASE + LOCALSTORAGE HYBRID STORAGE =====
+function initFirebase(cfg){
+  try{
+    if(firebase.apps&&firebase.apps.length){try{firebase.app().delete();}catch(e){}}
+    firebase.initializeApp(cfg);
+    DB=firebase.database();
+    FB_CFG=cfg;
+    localStorage.setItem('lldl_fbcfg',JSON.stringify(cfg));
+    document.getElementById('dbs').textContent='Firebase Connected!';
+    document.getElementById('dbs').style.color='#2e7d32';
+    listenFirebase();
+    showT('Firebase connected! Real-time sync shuru ho gaya.','info');
+    return true;
+  }catch(e){showT('Firebase error: '+e.message,'warn');DB=null;return false;}
+}
+function listenFirebase(){
+  if(!DB)return;
+  DB.ref('lldl').on('value',function(snap){
+    if(FB_SYNCING)return;
+    var d=snap.val();if(!d)return;
+    if(d.clients)CL=d.clients;
+    if(d.renewals)RN=d.renewals;
+    if(d.agents)AGENTS=d.agents;
+    if(d.users)USERS=d.users;
+    if(d.idS)idS=d.idS;
+    if(d.ridS)ridS=d.ridS;
+    localStorage.setItem('lldl_c',JSON.stringify(CL));
+    localStorage.setItem('lldl_r',JSON.stringify(RN));
+    localStorage.setItem('lldl_ag',JSON.stringify(AGENTS));
+    localStorage.setItem('lldl_u',JSON.stringify(USERS));
+    document.getElementById('dbc').textContent=CL.length;
+    document.getElementById('dbc2').textContent=RN.length;
+    document.getElementById('dbs').textContent='Synced ✔ '+new Date().toLocaleTimeString('hi-IN');
+    if(document.getElementById('list').classList.contains('active'))renderL();
+    if(document.getElementById('renew').classList.contains('active'))renderRL();
+    if(document.getElementById('pay').classList.contains('active'))renderPay();
+    if(document.getElementById('rem').classList.contains('active'))renderRem();
+  });
+}
+function save(){
+  try{
+    localStorage.setItem('lldl_c',JSON.stringify(CL));localStorage.setItem('lldl_r',JSON.stringify(RN));
+    localStorage.setItem('lldl_is',idS);localStorage.setItem('lldl_ris',ridS);
+    localStorage.setItem('lldl_u',JSON.stringify(USERS));localStorage.setItem('lldl_ag',JSON.stringify(AGENTS));
+    document.getElementById('dbc').textContent=CL.length;document.getElementById('dbc2').textContent=RN.length;
+    if(DB){
+      FB_SYNCING=true;
+      DB.ref('lldl').set({clients:CL,renewals:RN,agents:AGENTS,users:USERS,idS:idS,ridS:ridS,lastUpdated:new Date().toISOString(),updatedBy:CU?CU.username:''})
+      .then(function(){FB_SYNCING=false;document.getElementById('dbs').textContent='Firebase Saved ✔ '+new Date().toLocaleTimeString('hi-IN');document.getElementById('dbs').style.color='#2e7d32';})
+      .catch(function(e){FB_SYNCING=false;document.getElementById('dbs').textContent='LocalStorage only (FB error)';document.getElementById('dbs').style.color='#e65100';});
+    }else{
+      document.getElementById('dbs').textContent='LocalStorage Saved — '+new Date().toLocaleTimeString('hi-IN');
+    }
+  }catch(e){showT('Save error!','warn');}
+}
+function load(){
+  try{
+    var c=localStorage.getItem('lldl_c'),r=localStorage.getItem('lldl_r'),u=localStorage.getItem('lldl_u'),ag=localStorage.getItem('lldl_ag'),fbcfg=localStorage.getItem('lldl_fbcfg');
+    if(c)CL=JSON.parse(c);if(r)RN=JSON.parse(r);
+    if(u)USERS=JSON.parse(u);else USERS=[{username:'Admin',role:'admin',pw:xh('admin123')},{username:'Staff',role:'staff',pw:xh('staff123')}];
+    if(ag)AGENTS=JSON.parse(ag);
+    idS=parseInt(localStorage.getItem('lldl_is')||'1');ridS=parseInt(localStorage.getItem('lldl_ris')||'1');
+    if(fbcfg){FB_CFG=JSON.parse(fbcfg);setTimeout(function(){initFirebase(FB_CFG);},800);}
+  }catch(e){USERS=[{username:'Admin',role:'admin',pw:xh('admin123')},{username:'Staff',role:'staff',pw:xh('staff123')}];}
+}
+function disconnectFirebase(){
+  if(DB){try{DB.ref('lldl').off();firebase.app().delete();}catch(e){}}
+  DB=null;FB_CFG=null;localStorage.removeItem('lldl_fbcfg');
+  document.getElementById('dbs').textContent='LocalStorage Only';
+  document.getElementById('dbs').style.color='';
+  showT('Firebase disconnect ho gaya.','warn');
+}
+// Legacy placeholder - replaced by above
+function save_old(){
+  try{
+    localStorage.setItem('lldl_c',JSON.stringify(CL));localStorage.setItem('lldl_r',JSON.stringify(RN));
+    localStorage.setItem('lldl_is',idS);localStorage.setItem('lldl_ris',ridS);
+    localStorage.setItem('lldl_u',JSON.stringify(USERS));localStorage.setItem('lldl_ag',JSON.stringify(AGENTS));
+    document.getElementById('dbs').textContent='Saved — '+new Date().toLocaleTimeString('hi-IN');
+    document.getElementById('dbc').textContent=CL.length;document.getElementById('dbc2').textContent=RN.length;
+  }catch(e){showT('Save error!','warn');}
+}
+function load(){
+  try{
+    var c=localStorage.getItem('lldl_c'),r=localStorage.getItem('lldl_r'),u=localStorage.getItem('lldl_u'),ag=localStorage.getItem('lldl_ag');
+    if(c)CL=JSON.parse(c);if(r)RN=JSON.parse(r);
+    if(u)USERS=JSON.parse(u);else USERS=[{username:'Admin',role:'admin',pw:xh('admin123')},{username:'Staff',role:'staff',pw:xh('staff123')}];
+    if(ag)AGENTS=JSON.parse(ag);
+    idS=parseInt(localStorage.getItem('lldl_is')||'1');ridS=parseInt(localStorage.getItem('lldl_ris')||'1');
+  }catch(e){USERS=[{username:'Admin',role:'admin',pw:xh('admin123')},{username:'Staff',role:'staff',pw:xh('staff123')}];}
+}
+
+// JSON BACKUP
+function expJSON(){
+  var data={v:3,date:new Date().toISOString(),idS:idS,ridS:ridS,clients:CL,renewals:RN,agents:AGENTS};
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download='LLDL_Backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();showT('Backup save ho gaya!','info');
+}
+function impJSON(evt){
+  var file=evt.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{var data=JSON.parse(e.target.result);if(!data.clients){showT('Invalid file!','warn');return;}
+      if(!confirm('Import: '+data.clients.length+' applicants + '+(data.renewals?data.renewals.length:0)+' renewals. Confirm?'))return;
+      CL=data.clients;RN=data.renewals||[];if(data.agents)AGENTS=data.agents;
+      idS=data.idS||CL.length+1;ridS=data.ridS||RN.length+1;
+      save();ST('list');refAgents();showT(CL.length+' applicants import ho gaye!');
+    }catch(err){showT('File error: '+err.message,'warn');}
+  };reader.readAsText(file);evt.target.value='';
+}
+function expCSV(){
+  var h='Type,ID,Name,DOB,Mobile,Category,Agent,LL Ref,LL No,LL Start,LL Expiry,DL Elig,DL Ref,Total,Jama,Baki,Status,Remark';
+  var r1=CL.map(function(c){var tb=getTB(c),tj=c.jama+c.p2.jama2,tt=c.total+c.p2.total2;return['LL/DL',c.id,c.name,c.dob,c.mob,CAT[c.cat]||c.cat,c.agent,c.llref,c.llno,c.llstart,c.llend,c.dlelig,c.p2.dlref,tt,tj,tb,getSt(c).t,c.remark].map(function(v){return'"'+String(v||'').replace(/"/g,'""')+'"';}).join(',');});
+  var r2=RN.map(function(r){return['DL Renewal',r.id,r.name,r.dob,r.mob,r.transport,r.agent,'','','','','',r.dlref,r.total,r.jama,r.baki,getRSt(r).t,r.remark].map(function(v){return'"'+String(v||'').replace(/"/g,'""')+'"';}).join(',');});
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([[h].concat(r1).concat(r2).join('\n')],{type:'text/csv;charset=utf-8;'}));a.download='LLDL_'+new Date().toISOString().slice(0,10)+'.csv';a.click();showT('CSV export ho gaya!');
+}
+function expPDF(){
+  var h='<html><head><style>body{font-family:Arial,sans-serif;font-size:10px;padding:12px}h2{font-size:14px;color:#1a3a5c}h3{font-size:12px;color:#7b1fa2;margin:10px 0 4px}p{color:#888;font-size:10px;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#1a3a5c;color:#fff;padding:4px 6px;font-size:9px;text-align:left}th.p{background:#7b1fa2}td{padding:4px 6px;border:1px solid #ddd}tr:nth-child(even){background:#f8f8f8}.r{color:#c62828;font-weight:700}.g{color:#2e7d32}</style>  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head><body>';
+  h+='<h2>LL-DL Management System</h2><p>Date: '+new Date().toLocaleDateString('hi-IN')+' | Applicants: '+CL.length+' | Renewals: '+RN.length+'</p>';
+  if(CL.length){h+='<h3>LL/DL Applicants</h3><table><tr><th>#</th><th>Name</th><th>Mobile</th><th>Cat</th><th>Agent</th><th>LL No</th><th>LL Start</th><th>Expiry</th><th>DL Ref</th><th>Total</th><th>Jama</th><th>Baki</th><th>Status</th></tr>';CL.forEach(function(c){var tb=getTB(c),tj=c.jama+c.p2.jama2,tt=c.total+c.p2.total2;h+='<tr><td>'+c.id+'</td><td><b>'+c.name+'</b></td><td>'+c.mob+'</td><td>'+(CAT[c.cat]||'—')+'</td><td>'+(c.agent||'—')+'</td><td>'+(c.llno||'—')+'</td><td>'+c.llstart+'</td><td>'+c.llend+'</td><td>'+(c.p2.dlref||'—')+'</td><td>Rs.'+fmt(tt)+'</td><td class="g">Rs.'+fmt(tj)+'</td><td class="'+(tb>0?'r':'g')+'">Rs.'+fmt(tb)+'</td><td>'+getSt(c).t+'</td></tr>';});h+='</table>';}
+  if(RN.length){h+='<h3>DL Renewal</h3><table><tr><th class="p">#</th><th class="p">Name</th><th class="p">Mobile</th><th class="p">DL No</th><th class="p">Agent</th><th class="p">Transport</th><th class="p">Total</th><th class="p">Jama</th><th class="p">Baki</th><th class="p">Status</th></tr>';RN.forEach(function(r){h+='<tr><td>'+r.id+'</td><td><b>'+r.name+'</b></td><td>'+r.mob+'</td><td>'+(r.dlno||'—')+'</td><td>'+r.agent+'</td><td>'+r.transport+'</td><td>Rs.'+fmt(r.total)+'</td><td class="g">Rs.'+fmt(r.jama)+'</td><td class="'+(r.baki>0?'r':'g')+'">Rs.'+fmt(r.baki)+'</td><td>'+getRSt(r).t+'</td></tr>';});h+='</table>';}
+  h+='</body></html>';
+  var w=window.open('','_blank');if(!w){showT('Popup block! Allow karo.','warn');return;}
+  w.document.write(h);w.document.close();setTimeout(function(){w.print();},500);
+}
+
+// FIREBASE CONNECT
+function connectFB(){
+  var txt=document.getElementById('fbcfginput').value.trim();
+  if(!txt){showT('Config paste karo!','warn');return;}
+  try{
+    var cfg=JSON.parse(txt);
+    if(!cfg.apiKey||!cfg.databaseURL){showT('Config mein apiKey aur databaseURL zaroori hai!','warn');return;}
+    initFirebase(cfg);
+    renderAdmin();
+  }catch(e){showT('JSON format galat hai! Check karo.','warn');}
+}
+
+// WA
+function openWA(id,type){
+  waT=type;
+  if(waT==='r'){var r=RN.find(function(x){return x.id===id;});if(!r)return;waId=id;document.getElementById('wanum').value=r.mob;document.getElementById('watpl').value='rn';document.getElementById('wamsg').value=WTPL.rn(r);}
+  else{var c=CL.find(function(x){return x.id===id;});if(!c)return;waId=id;document.getElementById('wanum').value=c.mob;var tpl=document.getElementById('watpl'),s=getSt(c);if(s.k==='done')tpl.value='complete';else if(c.p2.applied||c.p2.dlref)tpl.value='dl';else if(s.k==='ll'){var now=new Date(),liso=toISO(c.llstart||''),df=new Date(toISO(c.dlelig)||addD(liso,30));tpl.value=(!isNaN(df)&&now>=df)?'reminder':'ll';}else tpl.value='baki';updWA();}
+  document.getElementById('wamod').classList.add('show');
+}
+function updWA(){if(waT==='r'){var r=RN.find(function(x){return x.id===waId;});if(r)document.getElementById('wamsg').value=WTPL.rn(r);return;}var c=CL.find(function(x){return x.id===waId;});if(!c)return;var t=document.getElementById('watpl').value;if(WTPL[t])document.getElementById('wamsg').value=WTPL[t](c);}
+function closeWA(){document.getElementById('wamod').classList.remove('show');}
+function sendWA(){var num=document.getElementById('wanum').value.trim();if(!num||num.length<10){showT('Sahi mobile no.!','warn');return;}window.open('https://wa.me/91'+num+'?text='+encodeURIComponent(document.getElementById('wamsg').value),'_blank');closeWA();showT('WhatsApp open ho gaya!');}
+
+function showT(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');setTimeout(function(){t.classList.remove('show');},3000);}
+
+function ST(name){
+  document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById(name).classList.add('active');
+  var dt=document.getElementById('dtab'),rdt=document.getElementById('rdtab');
+  dt.style.display='none';rdt.style.display='none';
+  if(name==='det'){dt.style.display='';dt.classList.add('active');}
+  else if(name==='rdet'){rdt.style.display='';rdt.classList.add('active');}
+  else{var b=document.querySelector('.tab[onclick="ST(\''+name+'\')"]');if(b)b.classList.add('active');}
+  if(name==='list')renderL();if(name==='rem')renderRem();if(name==='pay')renderPay();if(name==='renew')renderRL();if(name==='admin'&&CU&&CU.role==='admin')renderAdmin();
+}
+
+// INIT
+load();initLogin();
+document.getElementById('fls').value=today();
+</script>
+</body>
+</html>
