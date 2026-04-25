@@ -380,7 +380,7 @@ body.is-admin .admin-only{display:block}
 <div class="card acard">
   <div class="ct ctr">☁️ Firebase Setup — Online Cloud Sync</div>
   <div id="fbstatus" style="font-size:12px;padding:8px 12px;border-radius:6px;background:#f5f5f0;border:1px solid #e0e0e0;margin-bottom:10px">
-    Status: <span id="fbstatustxt" style="font-weight:700;color:#e65100">Not Connected (LocalStorage only)</span>
+    Status: <span id="fbstatustxt" style="font-weight:700;color:#e65100">Connecting...</span>
   </div>
   <div style="font-size:11px;color:#888;margin-bottom:10px;line-height:1.6">
     Firebase config paste karo neeche. Ek baar connect hoga toh <b>automatically</b> hamesha connect rahega.<br>
@@ -441,7 +441,17 @@ body.is-admin .admin-only{display:block}
 
 <script>
 var CL=[],RN=[],curC=null,curR=null,waId=null,waT='c',idS=1,ridS=1,CU=null,SEL=null;
-var DB=null,FB_CFG=null,FB_SYNCING=false;
+var DB=null,FB_SYNCING=false;
+// Firebase Config — directly set kiya hua
+var FB_CFG={
+  apiKey:"AIzaSyCslBLsmgxDnxJLplDutqxFLi36VHyN-68",
+  authDomain:"rto-system-19453.firebaseapp.com",
+  databaseURL:"https://rto-system-19453-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"rto-system-19453",
+  storageBucket:"rto-system-19453.firebasestorage.app",
+  messagingSenderId:"37475681313",
+  appId:"1:37475681313:web:6199ecdbffffc3f6c1cf60"
+};
 var USERS=[],AGENTS=['Self','Mohan Agency','Sharma Travels','Gupta RTO Services'];
 var CAT={MC:'M/C',MC_LMV:'M/C+LMV',MC_LMV_TRAC:'M/C+LMV+Trac',HTV:'HTV',END_LMV:'End.LMV',END_LMV_TRAC:'End.LMV+Trac'};
 var WTPL={
@@ -919,8 +929,11 @@ function load(){
     if(u)USERS=JSON.parse(u);else USERS=[{username:'Admin',role:'admin',pw:xh('admin123')},{username:'Staff',role:'staff',pw:xh('staff123')}];
     if(ag)AGENTS=JSON.parse(ag);
     idS=parseInt(localStorage.getItem('lldl_is')||'1');ridS=parseInt(localStorage.getItem('lldl_ris')||'1');
-    if(fbcfg){FB_CFG=JSON.parse(fbcfg);setTimeout(function(){initFirebase(FB_CFG);},800);}
   }catch(e){USERS=[{username:'Admin',role:'admin',pw:xh('admin123')},{username:'Staff',role:'staff',pw:xh('staff123')}];}
+  // Auto-connect Firebase with hardcoded config
+  setTimeout(function(){
+    try{initFirebase(FB_CFG);}catch(e){console.log('Firebase auto-connect failed:',e);}
+  },1000);
 }
 function disconnectFirebase(){
   if(DB){try{DB.ref('lldl').off();firebase.app().delete();}catch(e){}}
@@ -965,6 +978,10 @@ function expPDF(){
 }
 
 // FIREBASE CONNECT
+function tryConnect(){
+  try{initFirebase(FB_CFG);renderAdmin();}
+  catch(e){showT('Connect error: '+e.message,'warn');}
+}
 function connectFB(){
   var txt=document.getElementById('fbcfginput').value.trim();
   if(!txt){showT('Config paste karo!','warn');return;}
