@@ -146,7 +146,8 @@ body.is-admin .admin-only{display:block}
     <div class="login-logo">LL-DL Management System</div>
     <div class="login-sub">RTO Agent — Secure Login</div>
     <div class="login-user-select" id="uchips"></div>
-    <div class="lf"><label>Password</label><input type="password" id="lpw" placeholder="Password daalo..." onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="lf"><label>Username</label><input type="text" id="lun" placeholder="Username daalo..." autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('lpw').focus()"></div>
+    <div class="lf" style="margin-top:8px"><label>Password</label><input type="password" id="lpw" placeholder="Password daalo..." onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="login-btn" onclick="doLogin()">🔐 Login Karo</button>
     <div class="login-err" id="lerr">❌ Galat password!</div>
     <div class="login-hint">Default: Admin → <b>admin123</b> &nbsp;|&nbsp; Staff → <b>staff123</b></div>
@@ -517,16 +518,29 @@ function initLogin(){
 }
 function selU(i){SEL=i;document.querySelectorAll('.user-chip').forEach(function(c){c.classList.remove('sel-admin','sel-staff');});var u=USERS[i];document.getElementById('ch'+i).classList.add(u.role==='admin'?'sel-admin':'sel-staff');document.getElementById('lpw').focus();}
 function doLogin(){
-  if(SEL===null){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='Pehle user chuniye!';return;}
-  var pw=document.getElementById('lpw').value,u=USERS[SEL];
-  if(!xc(pw,u.pw)){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='❌ Galat password!';document.getElementById('lpw').value='';return;}
+  var un=(document.getElementById('lun')?document.getElementById('lun').value.trim():'');
+  var pw=document.getElementById('lpw').value;
+  var u=null;
+  // Try username field first
+  if(un){
+    u=USERS.find(function(x){return x.username.toLowerCase()===un.toLowerCase();});
+    if(!u){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='❌ Username nahi mila!';return;}
+    if(!xc(pw,u.pw)){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='❌ Galat password!';document.getElementById('lpw').value='';return;}
+  } else if(SEL!==null){
+    // Fallback: chip selected
+    u=USERS[SEL];
+    if(!xc(pw,u.pw)){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='❌ Galat password!';document.getElementById('lpw').value='';return;}
+  } else {
+    document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='Pehle username daalo!';return;
+  }
   CU=u;document.getElementById('login-screen').style.display='none';document.getElementById('topbar').style.display='flex';document.getElementById('mainapp').style.display='block';
   var b=document.getElementById('ubadge');b.textContent=(u.role==='admin'?'👑 ':'')+u.username;b.className='ubadge ubadge-'+(u.role==='admin'?'admin':'staff');
   if(u.role==='admin')document.body.classList.add('is-admin');else document.body.classList.remove('is-admin');
+  if(document.getElementById('lun'))document.getElementById('lun').value='';
   document.getElementById('lpw').value='';document.getElementById('lerr').style.display='none';
   refAgents();renderL();if(u.role==='admin')renderAdmin();
 }
-function doLogout(){CU=null;SEL=null;document.getElementById('login-screen').style.display='flex';document.getElementById('topbar').style.display='none';document.getElementById('mainapp').style.display='none';document.body.classList.remove('is-admin');document.querySelectorAll('.user-chip').forEach(function(c){c.classList.remove('sel-admin','sel-staff');});ST('new');}
+function doLogout(){CU=null;SEL=null;document.getElementById('login-screen').style.display='flex';document.getElementById('topbar').style.display='none';document.getElementById('mainapp').style.display='none';document.body.classList.remove('is-admin');document.querySelectorAll('.user-chip').forEach(function(c){c.classList.remove('sel-admin','sel-staff');});if(document.getElementById('lun'))document.getElementById('lun').value='';document.getElementById('lpw').value='';ST('new');}
 
 // SAVE APPLICANT
 function saveC(){
