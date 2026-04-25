@@ -518,27 +518,41 @@ function initLogin(){
 }
 function selU(i){SEL=i;document.querySelectorAll('.user-chip').forEach(function(c){c.classList.remove('sel-admin','sel-staff');});var u=USERS[i];document.getElementById('ch'+i).classList.add(u.role==='admin'?'sel-admin':'sel-staff');document.getElementById('lpw').focus();}
 function doLogin(){
-  var un=(document.getElementById('lun')?document.getElementById('lun').value.trim():'');
-  var pw=document.getElementById('lpw').value;
-  var u=null;
-  // Try username field first
-  if(un){
-    u=USERS.find(function(x){return x.username.toLowerCase()===un.toLowerCase();});
-    if(!u){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='❌ Username nahi mila!';return;}
-    if(!xc(pw,u.pw)){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='❌ Galat password!';document.getElementById('lpw').value='';return;}
-  } else if(SEL!==null){
-    // Fallback: chip selected
-    u=USERS[SEL];
-    if(!xc(pw,u.pw)){document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='❌ Galat password!';document.getElementById('lpw').value='';return;}
-  } else {
-    document.getElementById('lerr').style.display='block';document.getElementById('lerr').textContent='Pehle username daalo!';return;
+  try{
+    var unEl=document.getElementById('lun');
+    var pwEl=document.getElementById('lpw');
+    var errEl=document.getElementById('lerr');
+    var un=unEl?unEl.value.trim():'';
+    var pw=pwEl?pwEl.value:'';
+    if(!un){errEl.style.display='block';errEl.textContent='Username daalo!';return;}
+    if(!pw){errEl.style.display='block';errEl.textContent='Password daalo!';return;}
+    var u=null;
+    for(var i=0;i<USERS.length;i++){
+      if(USERS[i].username.toLowerCase()===un.toLowerCase()){u=USERS[i];break;}
+    }
+    if(!u){errEl.style.display='block';errEl.textContent='Username galat hai!';return;}
+    // Check password using xh
+    var hashed=xh(pw);
+    if(hashed!==u.pw){errEl.style.display='block';errEl.textContent='Password galat hai!';if(pwEl)pwEl.value='';return;}
+    // Login success
+    CU=u;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('topbar').style.display='flex';
+    document.getElementById('mainapp').style.display='block';
+    var b=document.getElementById('ubadge');
+    b.textContent=(u.role==='admin'?'👑 ':'')+u.username;
+    b.className='ubadge ubadge-'+(u.role==='admin'?'admin':'staff');
+    if(u.role==='admin')document.body.classList.add('is-admin');
+    else document.body.classList.remove('is-admin');
+    if(unEl)unEl.value='';
+    if(pwEl)pwEl.value='';
+    errEl.style.display='none';
+    refAgents();renderL();
+    if(u.role==='admin')renderAdmin();
+  }catch(err){
+    document.getElementById('lerr').style.display='block';
+    document.getElementById('lerr').textContent='Error: '+err.message;
   }
-  CU=u;document.getElementById('login-screen').style.display='none';document.getElementById('topbar').style.display='flex';document.getElementById('mainapp').style.display='block';
-  var b=document.getElementById('ubadge');b.textContent=(u.role==='admin'?'👑 ':'')+u.username;b.className='ubadge ubadge-'+(u.role==='admin'?'admin':'staff');
-  if(u.role==='admin')document.body.classList.add('is-admin');else document.body.classList.remove('is-admin');
-  if(document.getElementById('lun'))document.getElementById('lun').value='';
-  document.getElementById('lpw').value='';document.getElementById('lerr').style.display='none';
-  refAgents();renderL();if(u.role==='admin')renderAdmin();
 }
 function doLogout(){CU=null;SEL=null;document.getElementById('login-screen').style.display='flex';document.getElementById('topbar').style.display='none';document.getElementById('mainapp').style.display='none';document.body.classList.remove('is-admin');document.querySelectorAll('.user-chip').forEach(function(c){c.classList.remove('sel-admin','sel-staff');});if(document.getElementById('lun'))document.getElementById('lun').value='';document.getElementById('lpw').value='';ST('new');}
 
@@ -915,26 +929,7 @@ function disconnectFirebase(){
   document.getElementById('dbs').style.color='';
   showT('Firebase disconnect ho gaya.','warn');
 }
-// Legacy placeholder - replaced by above
-function save_old(){
-  try{
-    localStorage.setItem('lldl_c',JSON.stringify(CL));localStorage.setItem('lldl_r',JSON.stringify(RN));
-    localStorage.setItem('lldl_is',idS);localStorage.setItem('lldl_ris',ridS);
-    localStorage.setItem('lldl_u',JSON.stringify(USERS));localStorage.setItem('lldl_ag',JSON.stringify(AGENTS));
-    document.getElementById('dbs').textContent='Saved — '+new Date().toLocaleTimeString('hi-IN');
-    document.getElementById('dbc').textContent=CL.length;document.getElementById('dbc2').textContent=RN.length;
-  }catch(e){showT('Save error!','warn');}
-}
-function load(){
-  try{
-    var c=localStorage.getItem('lldl_c'),r=localStorage.getItem('lldl_r'),u=localStorage.getItem('lldl_u'),ag=localStorage.getItem('lldl_ag');
-    if(c)CL=JSON.parse(c);if(r)RN=JSON.parse(r);
-    if(u)USERS=JSON.parse(u);else USERS=[{username:'Admin',role:'admin',pw:xh('admin123')},{username:'Staff',role:'staff',pw:xh('staff123')}];
-    if(ag)AGENTS=JSON.parse(ag);
-    idS=parseInt(localStorage.getItem('lldl_is')||'1');ridS=parseInt(localStorage.getItem('lldl_ris')||'1');
-  }catch(e){USERS=[{username:'Admin',role:'admin',pw:xh('admin123')},{username:'Staff',role:'staff',pw:xh('staff123')}];}
-}
-
+// Storage functions above handle all saves
 // JSON BACKUP
 function expJSON(){
   var data={v:3,date:new Date().toISOString(),idS:idS,ridS:ridS,clients:CL,renewals:RN,agents:AGENTS};
@@ -960,9 +955,7 @@ function expCSV(){
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([[h].concat(r1).concat(r2).join('\n')],{type:'text/csv;charset=utf-8;'}));a.download='LLDL_'+new Date().toISOString().slice(0,10)+'.csv';a.click();showT('CSV export ho gaya!');
 }
 function expPDF(){
-  var h='<html><head><style>body{font-family:Arial,sans-serif;font-size:10px;padding:12px}h2{font-size:14px;color:#1a3a5c}h3{font-size:12px;color:#7b1fa2;margin:10px 0 4px}p{color:#888;font-size:10px;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#1a3a5c;color:#fff;padding:4px 6px;font-size:9px;text-align:left}th.p{background:#7b1fa2}td{padding:4px 6px;border:1px solid #ddd}tr:nth-child(even){background:#f8f8f8}.r{color:#c62828;font-weight:700}.g{color:#2e7d32}</style>  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-</head><body>';
+  var h='<html><head><style>body{font-family:Arial,sans-serif;font-size:10px;padding:12px}h2{font-size:14px;color:#1a3a5c}h3{font-size:12px;color:#7b1fa2;margin:10px 0 4px}p{color:#888;font-size:10px;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#1a3a5c;color:#fff;padding:4px 6px;font-size:9px;text-align:left}th.p{background:#7b1fa2}td{padding:4px 6px;border:1px solid #ddd}tr:nth-child(even){background:#f8f8f8}.r{color:#c62828;font-weight:700}.g{color:#2e7d32}</style></head><body>';
   h+='<h2>LL-DL Management System</h2><p>Date: '+new Date().toLocaleDateString('hi-IN')+' | Applicants: '+CL.length+' | Renewals: '+RN.length+'</p>';
   if(CL.length){h+='<h3>LL/DL Applicants</h3><table><tr><th>#</th><th>Name</th><th>Mobile</th><th>Cat</th><th>Agent</th><th>LL No</th><th>LL Start</th><th>Expiry</th><th>DL Ref</th><th>Total</th><th>Jama</th><th>Baki</th><th>Status</th></tr>';CL.forEach(function(c){var tb=getTB(c),tj=c.jama+c.p2.jama2,tt=c.total+c.p2.total2;h+='<tr><td>'+c.id+'</td><td><b>'+c.name+'</b></td><td>'+c.mob+'</td><td>'+(CAT[c.cat]||'—')+'</td><td>'+(c.agent||'—')+'</td><td>'+(c.llno||'—')+'</td><td>'+c.llstart+'</td><td>'+c.llend+'</td><td>'+(c.p2.dlref||'—')+'</td><td>Rs.'+fmt(tt)+'</td><td class="g">Rs.'+fmt(tj)+'</td><td class="'+(tb>0?'r':'g')+'">Rs.'+fmt(tb)+'</td><td>'+getSt(c).t+'</td></tr>';});h+='</table>';}
   if(RN.length){h+='<h3>DL Renewal</h3><table><tr><th class="p">#</th><th class="p">Name</th><th class="p">Mobile</th><th class="p">DL No</th><th class="p">Agent</th><th class="p">Transport</th><th class="p">Total</th><th class="p">Jama</th><th class="p">Baki</th><th class="p">Status</th></tr>';RN.forEach(function(r){h+='<tr><td>'+r.id+'</td><td><b>'+r.name+'</b></td><td>'+r.mob+'</td><td>'+(r.dlno||'—')+'</td><td>'+r.agent+'</td><td>'+r.transport+'</td><td>Rs.'+fmt(r.total)+'</td><td class="g">Rs.'+fmt(r.jama)+'</td><td class="'+(r.baki>0?'r':'g')+'">Rs.'+fmt(r.baki)+'</td><td>'+getRSt(r).t+'</td></tr>';});h+='</table>';}
